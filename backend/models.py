@@ -18,8 +18,6 @@ class MarkingDepartment(models.Model):
     city = models.CharField('登記原因', max_length=50)
     city = models.CharField('建物門牌', max_length=50)
 
-    # Multi column
-    # city = models.CharField('建物坐落地號', max_length=50) 
      
     city = models.CharField('主要用途', max_length=50)
     city = models.CharField('主要建材', max_length=50)
@@ -31,10 +29,20 @@ class MarkingDepartment(models.Model):
 
     city = models.CharField('其他登記事項', max_length=50)
 
+class MarkingDepartmentDependsLocationNumber(models.Model):
+    class Meta:
+        verbose_name = '建物坐落地號'
+        verbose_name_plural = '建物坐落地號'
+
+    markingdepartment = models.ForeignKey(MarkingDepartment, on_delete=models.CASCADE)
+    content = models.CharField('建物坐落地號', max_length=50)
+
 class MarkingDepartmentDependsBuildings(models.Model):
     class Meta:
         verbose_name = '標示部-附屬建物'
         verbose_name_plural = '標示部-附屬建物'
+
+    markingdepartment = models.ForeignKey(MarkingDepartment, on_delete=models.CASCADE)
 
     name = models.CharField('附屬建物用途', max_length=50)
     name = models.CharField('面積', max_length=50)
@@ -44,6 +52,7 @@ class MarkingDepartmentPublicPart(models.Model):
         verbose_name = '標示部-共有部分'
         verbose_name_plural = '標示部-共有部分'
 
+    markingdepartment = models.ForeignKey(MarkingDepartment, on_delete=models.CASCADE)
     name = models.CharField('共有部分', max_length=50)
     name = models.CharField('權利範圍', max_length=50)
     name = models.CharField('面積', max_length=50)
