@@ -6,6 +6,8 @@ import time
 from bs4 import BeautifulSoup
 from backend import models
 from django.forms.models import model_to_dict
+from datetime import datetime
+
 
 class StartParseText():
     def __init__(self,):
@@ -273,7 +275,7 @@ class StartParseText():
 
         return tmp_line
 
-    def StartFindOwn(self, input_path,writer):
+    def StartFindOwn(self, input_path, writer):
         soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
         table = soup.findAll(lambda tag: tag.name == 'table' and tag.has_attr(
             'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('width'))
@@ -291,14 +293,16 @@ class StartParseText():
             print("-------///////--------------")
         return result
 
-
-
-    def StartFindHouse(self, input_path,writer,result):
+    def StartFindHouse(self, input_path, writer, result, check):
         soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
         table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
             'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
-        
+
         data = {}
+        if result == '':
+            models.MarkingDepartmentDependsBuildings.objects.filter(
+                markingdepartment=check).delete()
+
         for row in table.findAll('tr'):
             cells = row.findAll('td')
             if len(cells) < 1:
@@ -307,20 +311,29 @@ class StartParseText():
                 data["sheet1"] = cells[1].text
                 data["sheet2"] = cells[3].text
 
-            if "sheet1" in data and "sheet2" in data :
-                models.MarkingDepartmentDependsBuildings.objects.create(
-                    markingdepartment = result,
-                    sheet1 = data["sheet1"],
-                    sheet2 = data["sheet2"],
-                )
+            if "sheet1" in data and "sheet2" in data:
+                if result != '':
+                    models.MarkingDepartmentDependsBuildings.objects.create(
+                        markingdepartment=result,
+                        sheet1=data["sheet1"],
+                        sheet2=data["sheet2"],
+                    )
+                else:
+                    models.MarkingDepartmentDependsBuildings.objects.create(
+                        markingdepartment=check,
+                        sheet1=data["sheet1"],
+                        sheet2=data["sheet2"],
+                    )
                 data = {}
     
-    def StartFindHouseNumber(self, input_path,writer,result):
+    def StartFindHouseNumber(self, input_path,writer,result,check):
         soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
         table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
             'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
         
         data = {}
+        if result == '':
+            models.MarkingDepartmentDependsLocationNumber.objects.filter(markingdepartment=check).delete()
         for x,row in enumerate(table.findAll('tr')):
             cells = row.findAll('td')
             if len(cells) < 1:
@@ -334,10 +347,17 @@ class StartParseText():
                 # input()
 
             if "sheet1" in data :
-                models.MarkingDepartmentDependsLocationNumber.objects.create(
-                    markingdepartment = result,
-                    sheet1 = data["sheet1"],
-                )
+                if result != '':
+
+                    models.MarkingDepartmentDependsLocationNumber.objects.create(
+                        markingdepartment = result,
+                        sheet1 = data["sheet1"],
+                    )
+                else:
+                     models.MarkingDepartmentDependsLocationNumber.objects.create(
+                        markingdepartment = check,
+                        sheet1 = data["sheet1"],
+                    )
                 data = {}
          
 
@@ -359,12 +379,14 @@ class StartParseText():
         return result
         # input()
 
-    def StartFindArray(self, input_path,writer,result):
+    def StartFindArray(self, input_path,writer,result,check):
         soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
        
         table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
             'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
-       
+        if result == '':
+            models.MarkingDepartmentPublicPart.objects.filter(markingdepartment=check).delete()
+
         all_public = []
         all_rights_scope_1 = []
         all_rights_scope_2 = []
@@ -416,15 +438,24 @@ class StartParseText():
 
 
         if "sheet1" in data and "sheet2" in data and "sheet3" in data and "sheet4" in data and "sheet5" in data :
-
-            models.MarkingDepartmentPublicPart.objects.create(
-                markingdepartment = result,
-                sheet1 = data["sheet1"],
-                sheet2 = data["sheet2"],
-                sheet3 = data["sheet3"],
-                sheet4 = data["sheet4"],
-                sheet5 = data["sheet5"]
-            )
+            if result != '':
+                models.MarkingDepartmentPublicPart.objects.create(
+                    markingdepartment = result,
+                    sheet1 = data["sheet1"],
+                    sheet2 = data["sheet2"],
+                    sheet3 = data["sheet3"],
+                    sheet4 = data["sheet4"],
+                    sheet5 = data["sheet5"]
+                )
+            else:
+                models.MarkingDepartmentPublicPart.objects.create(
+                    markingdepartment = check,
+                    sheet1 = data["sheet1"],
+                    sheet2 = data["sheet2"],
+                    sheet3 = data["sheet3"],
+                    sheet4 = data["sheet4"],
+                    sheet5 = data["sheet5"]
+                )
             data = {}
                 
     def process_signature(self, folder_fullpath):
@@ -560,26 +591,50 @@ class StartParseText():
                     #     tmp_line = "(空白)"
                     # writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
         reader.close
+        result = ''
+        check = models.MarkingDepartment.objects.filter(sheet3=data["sheet3"], sheet4=data["sheet4"])
+        if len(check) == 0:
        
-        result = models.MarkingDepartment.objects.create(
-            sheet1=data["sheet1"],
-            sheet2=data["sheet2"],
-            sheet3=data["sheet3"],
-            sheet4=data["sheet4"],
-            sheet5=data["sheet5"],
-            sheet6=data["sheet6"],
-            sheet7=data["sheet7"],
-            sheet8=data["sheet8"],
-            sheet9=data["sheet9"],
-            sheet10=data["sheet10"],
-            sheet11=data["sheet11"],
-            sheet12=data["sheet12"],
-            sheet13=data["sheet13"],
-            sheet14=data["sheet14"],
-            sheet15=data["sheet15"])
-        self.StartFindArray(input_path,writer,result)
-        self.StartFindHouse(input_path,writer,result)
-        self.StartFindHouseNumber(input_path,writer,result)
+            result = models.MarkingDepartment.objects.create(
+                sheet1=data["sheet1"],
+                sheet2=data["sheet2"],
+                sheet3=data["sheet3"],
+                sheet4=data["sheet4"],
+                sheet5=data["sheet5"],
+                sheet6=data["sheet6"],
+                sheet7=data["sheet7"],
+                sheet8=data["sheet8"],
+                sheet9=data["sheet9"],
+                sheet10=data["sheet10"],
+                sheet11=data["sheet11"],
+                sheet12=data["sheet12"],
+                sheet13=data["sheet13"],
+                sheet14=data["sheet14"],
+                sheet15=data["sheet15"])
+        else:
+            
+            check.update(
+                update_time=datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+                sheet1=data["sheet1"],
+                sheet2=data["sheet2"],
+                sheet3=data["sheet3"],
+                sheet4=data["sheet4"],
+                sheet5=data["sheet5"],
+                sheet6=data["sheet6"],
+                sheet7=data["sheet7"],
+                sheet8=data["sheet8"],
+                sheet9=data["sheet9"],
+                sheet10=data["sheet10"],
+                sheet11=data["sheet11"],
+                sheet12=data["sheet12"],
+                sheet13=data["sheet13"],
+                sheet14=data["sheet14"],
+                sheet15=data["sheet15"])
+            check = models.MarkingDepartment.objects.get(sheet3=data["sheet3"], sheet4=data["sheet4"])
+
+        self.StartFindArray(input_path,writer,result,check)
+        self.StartFindHouse(input_path,writer,result,check)
+        self.StartFindHouseNumber(input_path,writer,result,check)
         writer.close
 
     def process_owner(self, folder_fullpath, index):
@@ -675,22 +730,44 @@ class StartParseText():
                         target_txt, line)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet15"] = tmp_line
-        models.OwnershipDepartment.objects.create(
-            sheet1=data["sheet1"],
-            sheet2=data["sheet2"],
-            sheet3=data["sheet3"],
-            sheet4=data["sheet4"],
-            sheet5=data["sheet5"],
-            sheet6=data["sheet6"],
-            sheet7=data["sheet7"],
-            sheet8=data["sheet8"],
-            sheet9=data["sheet9"],
-            sheet10=data["sheet10"],
-            sheet11=data["sheet11"],
-            sheet12=data["sheet12"],
-            sheet13=data["sheet13"],
-            sheet14=data["sheet14"],
-            sheet15=data["sheet15"])
+        result = ''
+        check = models.OwnershipDepartment.objects.filter(sheet3=data["sheet3"], sheet4=data["sheet4"])
+        if len(check) == 0:
+            models.OwnershipDepartment.objects.create(
+                sheet1=data["sheet1"],
+                sheet2=data["sheet2"],
+                sheet3=data["sheet3"],
+                sheet4=data["sheet4"],
+                sheet5=data["sheet5"],
+                sheet6=data["sheet6"],
+                sheet7=data["sheet7"],
+                sheet8=data["sheet8"],
+                sheet9=data["sheet9"],
+                sheet10=data["sheet10"],
+                sheet11=data["sheet11"],
+                sheet12=data["sheet12"],
+                sheet13=data["sheet13"],
+                sheet14=data["sheet14"],
+                sheet15=data["sheet15"])
+        else:
+            
+            check.update(
+                update_time=datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+                sheet1=data["sheet1"],
+                sheet2=data["sheet2"],
+                sheet3=data["sheet3"],
+                sheet4=data["sheet4"],
+                sheet5=data["sheet5"],
+                sheet6=data["sheet6"],
+                sheet7=data["sheet7"],
+                sheet8=data["sheet8"],
+                sheet9=data["sheet9"],
+                sheet10=data["sheet10"],
+                sheet11=data["sheet11"],
+                sheet12=data["sheet12"],
+                sheet13=data["sheet13"],
+                sheet14=data["sheet14"],
+                sheet15=data["sheet15"])
         reader.close
         writer.close
 
@@ -875,39 +952,74 @@ class StartParseText():
                         tmp_line = "(空白)"
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet28"] = tmp_line
-
+        result = ''
+        check = models.OtherShipDepartment.objects.filter(sheet3=data["sheet3"], sheet4=data["sheet4"])
+        if len(check) == 0:
                     
-        
-        models.OtherShipDepartment.objects.create(
-            sheet1=data["sheet1"],
-            sheet2=data["sheet2"],
-            sheet3=data["sheet3"],
-            sheet4=data["sheet4"],
-            sheet5=data["sheet5"],
-            sheet6=data["sheet6"],
-            sheet7=data["sheet7"],
-            sheet8=data["sheet8"],
-            sheet9=data["sheet9"],
-            sheet10=data["sheet10"],
-            sheet11=data["sheet11"],
-            sheet12=data["sheet12"],
-            sheet13=data["sheet13"],
-            sheet14=data["sheet14"],
-            sheet15=data["sheet15"],
-            sheet16=data["sheet16"],
-            sheet17=data["sheet17"],
-            sheet18=data["sheet18"],
-            sheet19=data["sheet19"],
-            sheet20=data["sheet20"],
-            sheet21=data["sheet21"],
-            sheet22=data["sheet22"],
-            sheet23=data["sheet23"],
-            sheet24=data["sheet24"],
-            sheet25=data["sheet25"],
-            sheet26=data["sheet26"],
-            sheet27=data["sheet27"],
-            sheet28=data["sheet28"],
-            sheet29=data["sheet29"],
+            models.OtherShipDepartment.objects.create(
+                sheet1=data["sheet1"],
+                sheet2=data["sheet2"],
+                sheet3=data["sheet3"],
+                sheet4=data["sheet4"],
+                sheet5=data["sheet5"],
+                sheet6=data["sheet6"],
+                sheet7=data["sheet7"],
+                sheet8=data["sheet8"],
+                sheet9=data["sheet9"],
+                sheet10=data["sheet10"],
+                sheet11=data["sheet11"],
+                sheet12=data["sheet12"],
+                sheet13=data["sheet13"],
+                sheet14=data["sheet14"],
+                sheet15=data["sheet15"],
+                sheet16=data["sheet16"],
+                sheet17=data["sheet17"],
+                sheet18=data["sheet18"],
+                sheet19=data["sheet19"],
+                sheet20=data["sheet20"],
+                sheet21=data["sheet21"],
+                sheet22=data["sheet22"],
+                sheet23=data["sheet23"],
+                sheet24=data["sheet24"],
+                sheet25=data["sheet25"],
+                sheet26=data["sheet26"],
+                sheet27=data["sheet27"],
+                sheet28=data["sheet28"],
+                sheet29=data["sheet29"],
+                )
+        else:
+            
+            check.update(
+                update_time=datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+                sheet1=data["sheet1"],
+                sheet2=data["sheet2"],
+                sheet3=data["sheet3"],
+                sheet4=data["sheet4"],
+                sheet5=data["sheet5"],
+                sheet6=data["sheet6"],
+                sheet7=data["sheet7"],
+                sheet8=data["sheet8"],
+                sheet9=data["sheet9"],
+                sheet10=data["sheet10"],
+                sheet11=data["sheet11"],
+                sheet12=data["sheet12"],
+                sheet13=data["sheet13"],
+                sheet14=data["sheet14"],
+                sheet15=data["sheet15"],
+                sheet16=data["sheet16"],
+                sheet17=data["sheet17"],
+                sheet18=data["sheet18"],
+                sheet19=data["sheet19"],
+                sheet20=data["sheet20"],
+                sheet21=data["sheet21"],
+                sheet22=data["sheet22"],
+                sheet23=data["sheet23"],
+                sheet24=data["sheet24"],
+                sheet25=data["sheet25"],
+                sheet26=data["sheet26"],
+                sheet27=data["sheet27"],
+                sheet28=data["sheet28"],
+                sheet29=data["sheet29"],
             )
         reader.close
         writer.close

@@ -125,15 +125,20 @@ class StartCrawler(object):
         if not os.path.isdir(self.output_path):
             os.mkdir(self.output_path)
         
-        root = Tk()
-        root.withdraw()
-        excel_path = filedialog.askopenfilename()
-        print(excel_path)
-        root.destroy()
+        try:
+            root = Tk()
+            root.withdraw()
+            excel_path = filedialog.askopenfilename()
+            print(excel_path)
+            root.destroy()
 
-        wb = load_workbook(excel_path)
-        sheet = wb['工作表1']
-        col = 2
+            wb = load_workbook(excel_path)
+            sheet = wb['工作表1']
+            col = 2
+
+        except Exception as e:
+            return 'break'
+        
 
 
         self.chrome = self.create_chrome()
@@ -431,3 +436,4 @@ class StartCrawler(object):
                 with open( os.path.join(output_path_tmp, "other_"+str(index+1)+'_page.html') , 'w', encoding="utf-8") as f:
                     f.write(self.chrome.page_source)
 
+        return True

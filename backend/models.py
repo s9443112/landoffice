@@ -1,5 +1,5 @@
 from django.db import models
-
+from datetime import datetime
 # Create your models here.
 
 
@@ -29,6 +29,8 @@ class MarkingDepartment(models.Model):
     sheet14 = models.CharField('建築完成日期',  max_length=50, default=None, null=True, blank=True)
 
     sheet15 = models.CharField('其他登記事項', max_length=50, default=None, null=True, blank=True)
+    create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+    update_time = DateTimeWithoutTZField('更新日期', default=datetime.now)
 
     def __str__(self):
         return self.sheet3 +' / ' +self.sheet4
@@ -42,6 +44,8 @@ class MarkingDepartmentDependsLocationNumber(models.Model):
     markingdepartment = models.ForeignKey(
         MarkingDepartment, on_delete=models.CASCADE)
     sheet1 = models.CharField('建物坐落地號',  max_length=50, default=None, null=True, blank=True)
+    create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+    update_time = DateTimeWithoutTZField('更新日期', default=datetime.now)
 
 
 class MarkingDepartmentDependsBuildings(models.Model):
@@ -54,6 +58,8 @@ class MarkingDepartmentDependsBuildings(models.Model):
 
     sheet1 = models.CharField('附屬建物用途',  max_length=50, default=None, null=True, blank=True)
     sheet2 = models.CharField('面積',  max_length=50, default=None, null=True, blank=True)
+    create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+    update_time = DateTimeWithoutTZField('更新日期', default=datetime.now)
 
 
 class MarkingDepartmentPublicPart(models.Model):
@@ -68,6 +74,8 @@ class MarkingDepartmentPublicPart(models.Model):
     sheet3 = models.CharField('面積',  max_length=50, default=None, null=True, blank=True)
     sheet4 = models.CharField('其他登記事項',  max_length=255, default=None, null=True, blank=True)
     sheet5 = models.CharField('含停車位',  max_length=50, default=None, null=True, blank=True)
+    create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+    update_time = DateTimeWithoutTZField('更新日期', default=datetime.now)
 
 
 class OwnershipDepartment(models.Model):
@@ -90,6 +98,8 @@ class OwnershipDepartment(models.Model):
     sheet13 = models.CharField('權狀字號',  max_length=50, default=None, null=True, blank=True)
     sheet14 = models.CharField('相關他項登記次序',  max_length=50, default=None, null=True, blank=True)
     sheet15 = models.CharField('其他登記事項',  max_length=50, default=None, null=True, blank=True)
+    create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+    update_time = DateTimeWithoutTZField('更新日期', default=datetime.now)
 
 
 class OtherShipDepartment(models.Model):
@@ -125,3 +135,16 @@ class OtherShipDepartment(models.Model):
     sheet27 = models.CharField('共同擔保建號',  max_length=50, default=None, null=True, blank=True)
     sheet28 = models.CharField('其他登記事項',  max_length=50, default=None, null=True, blank=True)
     sheet29 = models.CharField('擔保債權種類及範圍',  max_length=250, default=None, null=True, blank=True)
+    create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+    update_time = DateTimeWithoutTZField('更新日期', default=datetime.now)
+
+
+class StartCrawler(models.Model):
+    class Meta:
+        verbose_name = '爬蟲紀錄'
+        verbose_name_plural = '爬蟲紀錄'
+
+    create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+
+
+    
