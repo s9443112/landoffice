@@ -30,11 +30,14 @@ class MarkingDepartment(models.Model):
 
     sheet15 = models.CharField('其他登記事項', max_length=50, default=None, null=True, blank=True)
 
+    def __str__(self):
+        return self.sheet3 +' / ' +self.sheet4
+
 
 class MarkingDepartmentDependsLocationNumber(models.Model):
     class Meta:
-        verbose_name = '建物坐落地號'
-        verbose_name_plural = '建物坐落地號'
+        verbose_name = '標示部-建物坐落地號'
+        verbose_name_plural = '標示部-建物坐落地號'
 
     markingdepartment = models.ForeignKey(
         MarkingDepartment, on_delete=models.CASCADE)
