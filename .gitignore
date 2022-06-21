@@ -13,4 +13,4 @@ env
 
 .vscode/symbols.json
 *.zip
-./output
+output/
