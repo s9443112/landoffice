@@ -91,8 +91,8 @@ class StartParseText():
             # ex_tmp_line = ex_tmp_line.split(".gif")
             # print(tmp_line)
             if ex_tmp_line != '':
-                print(ex_tmp_line)
-                print(ex_tmp_line_word)
+                # print(ex_tmp_line)
+                # print(ex_tmp_line_word)
 
                 if ex_tmp_line_word[0] == "1":
                     ex_tmp_line_word = "B"+ex_tmp_line_word[1:]
@@ -104,9 +104,9 @@ class StartParseText():
                 char = self.lookup(ex_tmp_line_word)
                 # print(char)
                 if char != None:
-                    print(tmp_line)
+                    # print(tmp_line)
                     tmp_line = tmp_line.replace(ex_tmp_line, "{}".format(char))
-                    print(tmp_line)
+                    # print(tmp_line)
                     continue
                     # result = result + char
                 else:
@@ -284,13 +284,13 @@ class StartParseText():
         result = ''
         for row in table[3].findAll('tr'):
             cells = row.findAll('td')
-            print(cells)
+            # print(cells)
             if len(cells) < 1:
                 continue
             if str(cells[0]) == '<td class="left" width="30%">相關他項登記次序</td>':
                 result = cells[1].text
                 break
-            print("-------///////--------------")
+            # print("-------///////--------------")
         return result
 
     def StartFindHouse(self, input_path, writer, result, check):
@@ -393,12 +393,54 @@ class StartParseText():
         other = []
         buffer = ''
         data={}
-
+        ggcheck = False
+        ggcheck2 = False
         for row in table.findAll('tr'):
             cells = row.findAll('td')
-
+            print(cells)
+            print("===========================================")
             if len(cells) < 2:
                 continue
+
+            if ggcheck == True:
+                
+                if str(cells[0]) == '<td class="left" rowspan="2" width="15%">　　含停車位</td>':
+                    buffer = cells[2].text
+                    ggcheck2 = True
+                else:
+                    if ggcheck2 !=True:
+
+                        ggcheck = False
+                        if result != '':
+                            models.MarkingDepartmentPublicPart.objects.create(
+                                markingdepartment = result,
+                                sheet1 = data["sheet1"],
+                                sheet2 = data["sheet2"],
+                                sheet3 = data["sheet3"],
+                                sheet4 = data["sheet4"],
+                            )
+                        else:
+                            models.MarkingDepartmentPublicPart.objects.create(
+                                markingdepartment = check,
+                                sheet1 = data["sheet1"],
+                                sheet2 = data["sheet2"],
+                                sheet3 = data["sheet3"],
+                                sheet4 = data["sheet4"],
+                            )
+                        data= {}
+
+                    
+
+                if str(cells[0]) == '<td class="left">權利範圍</td>':
+                    writer.write("[含停車位]\n編號: " + buffer + '權利範圍: ' + cells[1].text + "\n")
+                    
+                    data["sheet5"] = "編號: " + buffer + '權利範圍: ' + cells[1].text 
+                    buffer = ''
+                    ggcheck = False
+                    ggcheck2 = False
+                    # print(data)
+                    # input()
+
             
             if str(cells[0]) == '<td class="left">共有部分</td>':
                 
@@ -419,15 +461,9 @@ class StartParseText():
                 other.append(cells[1].text)
                 writer.write("[其他登記事項]\n" + cells[1].text + "\n")
                 data["sheet4"] = cells[1].text
+                ggcheck = True
 
-            if str(cells[0]) == '<td class="left" rowspan="2" width="15%">　　含停車位</td>':
-                buffer = cells[2].text
-
-            if str(cells[0]) == '<td class="left">權利範圍</td>':
-                writer.write("[含停車位]\n編號: " + buffer + '權利範圍: ' + cells[1].text + "\n")
-                
-                data["sheet5"] = "編號: " + buffer + '權利範圍: ' + cells[1].text 
-                buffer = ''
+            
 
             # for detail in cells:
             #     print(detail)
@@ -1048,7 +1084,7 @@ class StartParseText():
                                 self.process_owner(folder_fullpath, index)
                         elif file[:5] == "other":
                             index = file.split("_")[1]
-                            print(file[12:])
+                            # print(file[12:])
                             if file[12:] == '.html':
                                 self.process_other(folder_fullpath, index)
 

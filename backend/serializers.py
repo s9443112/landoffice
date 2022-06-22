@@ -140,4 +140,5 @@ class StartCrawlertSeializer(serializers.ModelSerializer):
         fields = (
             'id',
             'create_time',
+            'status'
         )

@@ -145,6 +145,7 @@ class StartCrawler(models.Model):
         verbose_name_plural = '爬蟲紀錄'
 
     create_time = DateTimeWithoutTZField('建立日期', default=datetime.now)
+    status = models.BooleanField('狀態',default=False) 
 
 
     
