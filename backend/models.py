@@ -82,6 +82,8 @@ class OwnershipDepartment(models.Model):
     class Meta:
         verbose_name = '所有權部'
         verbose_name_plural = '所有權部'
+    markingdepartment = models.ForeignKey(
+        MarkingDepartment, on_delete=models.CASCADE)
 
     sheet1 = models.CharField('縣市名稱',  max_length=50, default=None, null=True, blank=True)
     sheet2 = models.CharField('鄉鎮市區',  max_length=50, default=None, null=True, blank=True)
@@ -106,6 +108,10 @@ class OtherShipDepartment(models.Model):
     class Meta:
         verbose_name = '他項權利部'
         verbose_name_plural = '他項權利部'
+    
+    markingdepartment = models.ForeignKey(
+        MarkingDepartment, on_delete=models.CASCADE)
+    
     sheet1 = models.CharField('縣市名稱',  max_length=50, default=None, null=True, blank=True)
     sheet2 = models.CharField('鄉鎮市區',  max_length=50, default=None, null=True, blank=True)
     sheet3 = models.CharField('地段',  max_length=50, default=None, null=True, blank=True)

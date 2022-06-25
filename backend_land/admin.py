@@ -1,15 +1,14 @@
 from django.contrib import admin
 from .models import MarkingDepartment
-from .models import MarkingDepartmentDependsLocationNumber
-from .models import MarkingDepartmentDependsBuildings
-from .models import MarkingDepartmentPublicPart
 from .models import OwnershipDepartment
+from .models import OwnershipDepartment
+from .models import OwnershipDepartmentHistory
 from .models import OtherShipDepartment
 from .models import StartCrawler
-from backend.lib.main import NewCrawler
-from backend.lib.main_chunghwa import NewCrawler as chunghwa
-from backend.lib import parse_txt_excel
-from backend.lib import parse_pdf
+from backend_land.lib.main import NewCrawler
+from backend_land.lib.main_chunghwa import NewCrawler as chunghwa
+from backend_land.lib import parse_txt_excel
+from backend_land.lib import parse_pdf
 from import_export.admin import ImportExportMixin
 from django_object_actions import DjangoObjectActions
 from django.http import HttpResponse
@@ -35,51 +34,18 @@ class MarkingDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'sheet13',
         'sheet14',
         'sheet15',
+        'sheet16',
+    
         'create_time',
         'update_time'
     )
     search_fields = ['sheet1','sheet2','sheet3','sheet4']
 
 
-class MarkingDepartmentDependsLocationNumberAdmin(ImportExportMixin, admin.ModelAdmin):
-    list_display = (
-        'id',
-        'markingdepartment',
-        'sheet1',
-        'create_time',
-        'update_time'
-    )
-
-
-class MarkingDepartmentDependsBuildingsAdmin(ImportExportMixin, admin.ModelAdmin):
-    list_display = (
-        'id',
-        'markingdepartment',
-        'sheet1',
-        'sheet2',
-        'create_time',
-        'update_time'
-    )
-
-
-class MarkingDepartmentPublicPartAdmin(ImportExportMixin, admin.ModelAdmin):
-    list_display = (
-        'id',
-        'markingdepartment',
-        'sheet1',
-        'sheet2',
-        'sheet3',
-        'sheet4',
-        'sheet5',
-        'create_time',
-        'update_time'
-    )
-
 
 class OwnershipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
     list_display = (
         'id',
-        'markingdepartment',
         'sheet1',
         'sheet2',
         'sheet3',
@@ -95,16 +61,30 @@ class OwnershipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'sheet13',
         'sheet14',
         'sheet15',
+        'sheet16',
+        'sheet17',
+        'sheet18',
         'create_time',
         'update_time'
     )
     search_fields = ['sheet1','sheet2','sheet3','sheet4']
 
 
+class OwnershipDepartmentHistoryAdmin(ImportExportMixin, admin.ModelAdmin):
+    list_display = (
+        'id',
+        'ownershipdepartment',
+        'sheet1',
+        'sheet2',
+        'sheet3',
+        'create_time',
+        'update_time'
+    )
+
+
 class OtherShipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
     list_display = (
         'id',
-        'markingdepartment',
         'sheet1',
         'sheet2',
         'sheet3',
@@ -157,13 +137,14 @@ class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin
         start_scheduler.status = True
         start_scheduler.save()
 
+
     def make_crawler(modeladmin, request, queryset):
         print("開始爬蟲")
         StartCrawler.objects.create()
         NewCrawler().main_start()
 
         start_scheduler = StartCrawler.objects.all().order_by('-id')[:1]
-        print(start_scheduler)
+        # print(start_scheduler)
 
         start_scheduler = StartCrawler.objects.get(id=start_scheduler[0].id)
         start_scheduler.status = True
@@ -185,20 +166,15 @@ class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin
         'create_time',
         'status'
     )
-    changelist_actions = ('make_crawler','make_excel','make_pdf' )
+    changelist_actions = ('chunghwa','make_crawler','make_excel','make_pdf' )
     # actions = [make_crawler]
 
-admin.site.site_header = '地政事務所 - 爬蟲資料庫'
-admin.site.site_title = '地政事務所 - 爬蟲資料庫'
+admin.site.site_header = '地政事務所 - 土地爬蟲資料庫'
+admin.site.site_title = '地政事務所 - 土地爬蟲資料庫'
 admin.site.index_title = '功能列表'
 
 admin.site.register(MarkingDepartment, MarkingDepartmentAdmin)
-admin.site.register(MarkingDepartmentDependsLocationNumber,
-                    MarkingDepartmentDependsLocationNumberAdmin)
-admin.site.register(MarkingDepartmentDependsBuildings,
-                    MarkingDepartmentDependsBuildingsAdmin)
-admin.site.register(MarkingDepartmentPublicPart,
-                    MarkingDepartmentPublicPartAdmin)
 admin.site.register(OwnershipDepartment, OwnershipDepartmentAdmin)
+admin.site.register(OwnershipDepartmentHistory, OwnershipDepartmentHistoryAdmin)
 admin.site.register(OtherShipDepartment, OtherShipDepartmentAdmin)
 admin.site.register(StartCrawler, StartCrawlerAdmin)

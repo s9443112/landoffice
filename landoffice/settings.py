@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_extensions',
     'backend',
+    'backend_land'
 ]
 IMPORT_EXPORT_USE_TRANSACTIONS = True
 
@@ -110,9 +111,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-Hant'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Taipei'
 
 USE_I18N = True
 

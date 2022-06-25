@@ -5,14 +5,14 @@ from os.path import isfile, isdir, join
 import time
 from bs4 import BeautifulSoup
 from sqlalchemy import false
-from backend import models
+from backend_land import models
 from django.forms.models import model_to_dict
 from datetime import datetime
 
 
 class StartParseText():
     def __init__(self,):
-        self.ouput_path = "./output"
+        self.ouput_path = "./output_land"
 
         # -*- coding: utf-8 -*-
     def lookup(self, target):
@@ -326,50 +326,34 @@ class StartParseText():
                         sheet2=data["sheet2"],
                     )
                 data = {}
-    
-    def StartFindHouseNumber(self, input_path,writer,result,check):
+
+    def StartFindHouseNumber(self, input_path):
         soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
         table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
             'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
-        
-        data = {}
-        startbuffer = False
-        if result == '':
-            models.MarkingDepartmentDependsLocationNumber.objects.filter(markingdepartment=check).delete()
-        for x,row in enumerate(table.findAll('tr')):
+        result = False
+        real_result = ''
+        for row in table.findAll('tr'):
             cells = row.findAll('td')
             # print(cells)
-            # print("///////////////////////////////////////")
+            # print("------------------------")
             if len(cells) < 1:
                 continue
-            
-            if startbuffer == True:
-                if str(cells[0]) == '<td class="left"></td>':
-                    data["sheet1"] = cells[1].text
-                else:
-                    startbuffer = False
 
-            if str(cells[0]) == '<td class="bar" colspan="4">建物坐落地號</td>':
-                startbuffer = True
+            if result == True:
+                print(cells)
+                # input()
+                real_result = cells[0].text
+                break
+            if str(cells[0]) == '<td class="left" rowspan="2" width="25%">地上建物建號</td>':
+                result = True
 
-            if "sheet1" in data :
-                print("************************************")
-                print(data)
-                if result != '':
+        # print(real_result)
+        # real_result = real_result.replace(' ','')
+        # input()
+        return real_result
 
-                    models.MarkingDepartmentDependsLocationNumber.objects.create(
-                        markingdepartment = result,
-                        sheet1 = data["sheet1"],
-                    )
-                else:
-                     models.MarkingDepartmentDependsLocationNumber.objects.create(
-                        markingdepartment = check,
-                        sheet1 = data["sheet1"],
-                    )
-                data = {}
-         
-
-    def StartFindOther(self, input_path,writer):
+    def StartFindOther(self, input_path, writer):
         soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
         table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
             'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
@@ -382,147 +366,56 @@ class StartParseText():
             if str(cells[0]) == '<td class="left">其他登記事項</td>':
                 result = cells[1].text
                 break
-        
+
         # print(result)
         return result
         # input()
 
-    def StartFindArray(self, input_path,writer,result,check):
+    def StartFindArray(self, input_path, writer, result, check):
         soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
-       
-        table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
-            'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
-        if result == '':
-            models.MarkingDepartmentPublicPart.objects.filter(markingdepartment=check).delete()
 
-        all_public = []
-        all_rights_scope_1 = []
-        all_rights_scope_2 = []
-        other = []
-        buffer = ''
-        data={}
-        ggcheck = False
-        ggcheck2 = False
-        for row in table.findAll('tr'):
+        # table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
+        #     'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
+        table = soup.findAll(lambda tag: tag.name == 'table' and tag.has_attr(
+            'cellpadding') and tag.has_attr('cellspacing') and tag.has_attr('width'))
+        if result == '':
+            models.OwnershipDepartmentHistory.objects.filter(
+                ownershipdepartment=check).delete()
+
+        data = {}
+        for row in table[4].findAll('tr'):
             cells = row.findAll('td')
             # print(cells)
             # print("===========================================")
-            if len(cells) < 2:
+            if len(cells) < 1:
                 continue
 
-            if ggcheck == True:
-                
-                if str(cells[0]) == '<td class="left" rowspan="2" width="15%">　　含停車位</td>':
-                    buffer = cells[2].text
-                    ggcheck2 = True
-                else:
-                    if ggcheck2 !=True:
-
-                        ggcheck = False
-                        if result != '':
-                            models.MarkingDepartmentPublicPart.objects.create(
-                                markingdepartment = result,
-                                sheet1 = data["sheet1"],
-                                sheet2 = data["sheet2"],
-                                sheet3 = data["sheet3"],
-                                sheet4 = data["sheet4"],
-                            )
-                        else:
-                            models.MarkingDepartmentPublicPart.objects.create(
-                                markingdepartment = check,
-                                sheet1 = data["sheet1"],
-                                sheet2 = data["sheet2"],
-                                sheet3 = data["sheet3"],
-                                sheet4 = data["sheet4"],
-                            )
-                        data= {}
-
-                    
-
-                if str(cells[0]) == '<td class="left">權利範圍</td>':
-                    writer.write("[含停車位]\n編號: " + buffer + '權利範圍: ' + cells[1].text + "\n")
-                    
-                    data["sheet5"] = "編號: " + buffer + '權利範圍: ' + cells[1].text 
-                    buffer = ''
-                    ggcheck = False
-                    ggcheck2 = False
-                    # print(data)
-                    # input()
-
-            
-            if str(cells[0]) == '<td class="left">共有部分</td>':
-                
-                all_public.append(cells[1].text)
-                writer.write("[共有部分]\n" + cells[1].text + "\n")
+            if str(cells[0]) == '<td class="left">年月</td>':
                 data["sheet1"] = cells[1].text
+                data["sheet2"] = cells[3].text
 
-            if str(cells[0]) == '<td class="left">　權利範圍</td>':
-                all_rights_scope_1.append(cells[1].text)
-                all_rights_scope_2.append(cells[3].text)
-                
-                writer.write("[權利範圍]\n" + cells[1].text + "\n")
-                writer.write("[面積]\n" + cells[3].text + "\n")
-                data["sheet2"] = cells[1].text
-                data["sheet3"] = cells[3].text
-                
-            if str(cells[0]) == '<td class="left">　其他登記事項</td>':
-                other.append(cells[1].text)
-                writer.write("[其他登記事項]\n" + cells[1].text + "\n")
-                data["sheet4"] = cells[1].text
-                ggcheck = True
+            if str(cells[0]) == '<td class="left">歷次取得權利範圍</td>':
+                data["sheet3"] = cells[1].text
 
-            
-
-            # for detail in cells:
-            #     print(detail)
-            # print(data)
-            
-            # print("-------------------------------------")
-            # print(cells)
-
-
-            if "sheet1" in data and "sheet2" in data and "sheet3" in data and "sheet4" in data and "sheet5" in data :
+            print(data)
+            if "sheet1" in data and "sheet2" in data and "sheet3" in data:
                 if result != '':
-                    models.MarkingDepartmentPublicPart.objects.create(
-                        markingdepartment = result,
-                        sheet1 = data["sheet1"],
-                        sheet2 = data["sheet2"],
-                        sheet3 = data["sheet3"],
-                        sheet4 = data["sheet4"],
-                        sheet5 = data["sheet5"]
+                    models.OwnershipDepartmentHistory.objects.create(
+                        ownershipdepartment=result,
+                        sheet1=data["sheet1"],
+                        sheet2=data["sheet2"],
+                        sheet3=data["sheet3"]
+
                     )
                 else:
-                    models.MarkingDepartmentPublicPart.objects.create(
-                        markingdepartment = check,
-                        sheet1 = data["sheet1"],
-                        sheet2 = data["sheet2"],
-                        sheet3 = data["sheet3"],
-                        sheet4 = data["sheet4"],
-                        sheet5 = data["sheet5"]
+                    models.OwnershipDepartmentHistory.objects.create(
+                        ownershipdepartment=check,
+                        sheet1=data["sheet1"],
+                        sheet2=data["sheet2"],
+                        sheet3=data["sheet3"]
                     )
                 data = {}
-        
 
-        if "sheet1" in data:
-            if result != '':
-                models.MarkingDepartmentPublicPart.objects.create(
-                    markingdepartment = result,
-                    sheet1 = data["sheet1"],
-                    sheet2 = data["sheet2"],
-                    sheet3 = data["sheet3"],
-                    sheet4 = data["sheet4"],
-                    sheet5 = data["sheet5"]
-                )
-            else:
-                models.MarkingDepartmentPublicPart.objects.create(
-                    markingdepartment = check,
-                    sheet1 = data["sheet1"],
-                    sheet2 = data["sheet2"],
-                    sheet3 = data["sheet3"],
-                    sheet4 = data["sheet4"],
-                    sheet5 = data["sheet5"]
-                )
-                
     def process_signature(self, folder_fullpath):
         # 標示部
         input_path = join(folder_fullpath, "標示部.html")
@@ -530,12 +423,16 @@ class StartParseText():
         writer = open(output_path, 'w', encoding="utf-8")
         reader = open(input_path, 'r', encoding="utf-8")
         target_txt = "<style>#content a:link {"
-        writer.write("建物標示部\n")
+        writer.write("土地標示部\n")
         data = {}
         for line in reader.readlines():
             line = line[:-1]
             if len(line) > len(target_txt):
-                if line[:len(target_txt)] == target_txt:
+                print(line)
+                print('123456789456123456789')
+                print(line[:len(target_txt)])
+                print("----------------------------------------")
+                if line[:len(target_txt)] == target_txt or line[:len(target_txt)] == '    <style>#content a:li':
 
                     target_txt = "縣市"
                     tmp_line = self.find_target_context(target_txt, line, 1)
@@ -552,7 +449,7 @@ class StartParseText():
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet3"] = tmp_line
 
-                    target_txt = "建號"
+                    target_txt = "地號"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet4"] = tmp_line
@@ -567,101 +464,67 @@ class StartParseText():
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet6"] = tmp_line
 
-                    target_txt = "建物門牌"
-                    tmp_line = self.find_target_context_may_include_img(
-                        target_txt, line)
+                    target_txt = "面積"
+                    tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet7"] = tmp_line
 
-                    # target_txt = "建物坐落地號"
-                    # tmp_line = self.find_target_context(
-                    #     target_txt, line, 3, continue_flag=True)
-                    # writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    
-
-                    target_txt = "主要用途"
+                    target_txt = "使用分區"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet8"] = tmp_line
 
-                    target_txt = "主要建材"
+                    target_txt = "使用地類別"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet9"] = tmp_line
 
-                    target_txt = "總面積"
-                    tmp_line = self.find_target_context(target_txt, line, 1)
-                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet11"] = tmp_line
-
-                    target_txt = "層次面積"
-                    tmp_line = self.find_target_context(target_txt, line, 1)
-                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet13"] = tmp_line
-
-                    target_txt = "層數"
+                    target_txt = "公告現值年月"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet10"] = tmp_line
 
-                    target_txt = "層次"
+                    target_txt = "公告土地現值"
+                    tmp_line = self.find_target_context(target_txt, line, 1)
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet11"] = tmp_line
+
+                    target_txt = "公告地價年月"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet12"] = tmp_line
 
-                    target_txt = "建築完成日期"
+                    target_txt = "公告地價"
+                    tmp_line = self.find_target_context(target_txt, line, 1)
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet13"] = tmp_line
+
+                    target_txt = "地上建物建號"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet14"] = tmp_line
 
-                    target_txt = "附屬建物用途"
-                    start_index = 0
+                    target_txt = "其他登記事項"
+                    tmp_line = self.find_target_context(
+                        target_txt, line, 1, skip_br=True)
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet15"] = tmp_line
 
-                    while 1:
-                        # print(start_index)
-                        house_index = line.find(target_txt, start_index)
-
-                        tmp_line = self.find_target_context(
-                            target_txt, line, 1, count=start_index)
-
-                        if tmp_line != '★錯誤★':
-                            writer.write(
-                                "[" + target_txt + "]\n" + tmp_line + "\n")
-                        else:
-                            pass
-                            # writer.write("[" + target_txt + "]\n" + '無' + "\n")
-
-                        if tmp_line != '★錯誤★':
-
-                            de_target_txt = "面積"
-                            tmp_line = self.find_target_context(
-                                de_target_txt, line, 1, count=start_index+60)
-                            writer.write(
-                                "[" + de_target_txt + "]\n" + tmp_line + "\n")
-                        else:
-                            pass
-                            # writer.write("[" + target_txt + "]\n" + '無' + "\n")
-
-                        if house_index == -1:
-                            break
-
-                        start_index = house_index + 1
-                    
-                    data["sheet15"] = self.StartFindOther(input_path,writer)
-                    
-                    # target_txt = "其他登記事項"
-                    # tmp_line = self.find_target_context(
-                    #     target_txt, line, 1, skip_br=True)
-                    # if tmp_line == "":
-                    #     tmp_line = "(空白)"
-                    # writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    target_txt = "地價備註事項"
+                    tmp_line = self.find_target_context(
+                        target_txt, line, 1, skip_br=True)
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet16"] = tmp_line
+        # print(data)
+        data["sheet14"] = data["sheet14"] + '   ' + \
+            self.StartFindHouseNumber(input_path)
         reader.close
-        result = ''
+        check = models.MarkingDepartment.objects.filter(
+            sheet3=data["sheet3"], sheet4=data["sheet4"])
         gg = True
-        check = models.MarkingDepartment.objects.filter(sheet3=data["sheet3"], sheet4=data["sheet4"])
         if len(check) == 0:
-       
-            result = models.MarkingDepartment.objects.create(
+
+            models.MarkingDepartment.objects.create(
                 sheet1=data["sheet1"],
                 sheet2=data["sheet2"],
                 sheet3=data["sheet3"],
@@ -676,9 +539,10 @@ class StartParseText():
                 sheet12=data["sheet12"],
                 sheet13=data["sheet13"],
                 sheet14=data["sheet14"],
-                sheet15=data["sheet15"])
+                sheet15=data["sheet15"],
+                sheet16=data["sheet16"])
         else:
-            
+
             check.update(
                 update_time=datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
                 sheet1=data["sheet1"],
@@ -695,15 +559,12 @@ class StartParseText():
                 sheet12=data["sheet12"],
                 sheet13=data["sheet13"],
                 sheet14=data["sheet14"],
-                sheet15=data["sheet15"])
+                sheet15=data["sheet15"],
+                sheet16=data["sheet16"])
             gg = False
             check = models.MarkingDepartment.objects.get(sheet3=data["sheet3"], sheet4=data["sheet4"])
-
-        self.StartFindArray(input_path,writer,result,check)
-        self.StartFindHouse(input_path,writer,result,check)
-        self.StartFindHouseNumber(input_path,writer,result,check)
+        
         writer.close
-
         if gg == True:
             last = models.MarkingDepartment.objects.all().order_by('-id')[:1]
             last = models.MarkingDepartment.objects.get(id=last[0].id)
@@ -718,15 +579,22 @@ class StartParseText():
 
         writer = open(output_path, 'w', encoding="utf-8")
         reader = open(input_path, 'r', encoding="utf-8")
-        target_txt = "<style>.left{	font-size: 100%;"
+        target_txt = "<style>#content a:link {    color: #000088;"
         writer.write("建物所有權部\n")
         data = {}
         for line in reader.readlines():
             line = line[:-1]
             if len(line) > len(target_txt):
-                if line[:len(target_txt)] == target_txt:
+                # print(line[:len(target_txt)])
+                # print(target_txt)
+                # print(line)
+                # print('123456789456123456789')
+                # print(line[:len(target_txt)])
+                # print("----------------------------------------")
+                if line[:len(target_txt)] == target_txt or line[:len(target_txt)] == '    <style>#content a:link {    color: #000':
+                    # input()
 
-                    target_txt = "縣市名稱"
+                    target_txt = "縣市"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet1"] = tmp_line
@@ -741,7 +609,7 @@ class StartParseText():
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet3"] = tmp_line
 
-                    target_txt = "建號"
+                    target_txt = "地號"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet4"] = tmp_line
@@ -781,38 +649,64 @@ class StartParseText():
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet11"] = tmp_line
 
-                    target_txt = "權利範圍"
-                    tmp_line = self.find_target_context(target_txt, line, 1)
-                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet12"] = tmp_line
+                    # target_txt = "相關他項登記次序"
+                    # tmp_line = self.find_target_context(target_txt, line, 1)
 
-                    target_txt = "權狀字號"
+                    # if tmp_line != '★錯誤★':
+                    #     writer.write(
+                    #         "[" + target_txt + "]\n" + tmp_line + "\n")
+                    #     data["sheet12"] = tmp_line
+                    # else:
+                    #     writer.write("[" + target_txt + "]\n" + '無' + "\n")
+                    data["sheet12"] = self.StartFindOwn(input_path, writer)
+
+                    target_txt = "權利範圍"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet13"] = tmp_line
 
-                    target_txt = "相關他項登記次序"
-                    # tmp_line = self.find_target_context(
-                    #     target_txt, line,1)
-                    
-                    # print("相關他項登記次序")
-                    # print(tmp_line)
-                    data["sheet14"] = self.StartFindOwn(input_path,writer)
-                    writer.write("[" + target_txt + "]\n" + data["sheet14"] + "\n")
+                    target_txt = "權狀字號"
+                    tmp_line = self.find_target_context(target_txt, line, 1)
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet14"] = tmp_line
 
-                    target_txt = "其他登記事項"
-                    tmp_line = self.find_target_context_other_info(
-                        target_txt, line)
+                    target_txt = "當期申報地價年月"
+                    tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet15"] = tmp_line
+
+                    target_txt = "當期申報地價"
+                    tmp_line = self.find_target_context(target_txt, line, 1)
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet16"] = tmp_line
+
+                    target_txt = "其他登記事項"
+                    tmp_line = self.find_target_context(
+                        target_txt, line, 1, skip_br=True)
+                    # print(tmp_line)
+                    # input()
+                    if tmp_line == "<p>(空白)</p":
+                        tmp_line = "(空白)"
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet17"] = tmp_line
+
+                    target_txt = "地價備註事項"
+                    tmp_line = self.find_target_context(
+                        target_txt, line, 1, skip_br=True)
+                    if tmp_line == "<p>(空白)</p":
+                        tmp_line = "(空白)"
+                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet18"] = tmp_line
+
         result = ''
+
         print(data)
-        check = models.OwnershipDepartment.objects.filter(sheet3=data["sheet3"], sheet4=data["sheet4"],sheet5=data["sheet5"])
-        print(len(check))
-        print(mark)
+        check = models.OwnershipDepartment.objects.filter(
+            sheet3=data["sheet3"], sheet4=data["sheet4"], sheet5=data["sheet5"])
+        # print(len(check))
         if len(check) == 0:
-            print("non repeat")
-            models.OwnershipDepartment.objects.create(
+            # print("non repeat")
+            result = models.OwnershipDepartment.objects.create(
                 markingdepartment = mark,
                 sheet1=data["sheet1"],
                 sheet2=data["sheet2"],
@@ -828,9 +722,12 @@ class StartParseText():
                 sheet12=data["sheet12"],
                 sheet13=data["sheet13"],
                 sheet14=data["sheet14"],
-                sheet15=data["sheet15"])
+                sheet15=data["sheet15"],
+                sheet16=data["sheet16"],
+                sheet17=data["sheet17"],
+                sheet18=data["sheet18"])
         else:
-            print("repeat")
+            # print("repeat")
             check.update(
                 update_time=datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
                 markingdepartment = mark,
@@ -848,7 +745,14 @@ class StartParseText():
                 sheet12=data["sheet12"],
                 sheet13=data["sheet13"],
                 sheet14=data["sheet14"],
-                sheet15=data["sheet15"])
+                sheet15=data["sheet15"],
+                sheet16=data["sheet16"],
+                sheet17=data["sheet17"],
+                sheet18=data["sheet18"])
+            check = models.OwnershipDepartment.objects.get(
+                sheet3=data["sheet3"], sheet4=data["sheet4"], sheet5=data["sheet5"])
+
+        self.StartFindArray(input_path, writer, result, check)
         reader.close
         writer.close
 
@@ -883,7 +787,7 @@ class StartParseText():
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet3"] = tmp_line
 
-                    target_txt = "建號"
+                    target_txt = "地號"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet4"] = tmp_line
@@ -949,25 +853,15 @@ class StartParseText():
                     if tmp_line != '★錯誤★':
                         writer.write(
                             "[" + target_txt + "]\n" + tmp_line + "\n")
-                        data["sheet29"] = tmp_line
+                        data["sheet16"] = tmp_line
                     else:
                         writer.write("[" + target_txt + "]\n" + '無' + "\n")
-                        data["sheet29"] = '無'
+                        data["sheet16"] = '無'
 
                     target_txt = "擔保債權確定期日"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet16"] = tmp_line
-
-                    target_txt = "存續期間"
-                    tmp_line = self.find_target_context(target_txt, line, 1)
-                    
-                    if tmp_line != '★錯誤★':
-                        writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                        data["sheet17"] = tmp_line
-                    else:
-                        writer.write("[" + target_txt + "]\n" + '無' + "\n")
-                        data["sheet17"] = '無'
+                    data["sheet17"] = tmp_line
 
                     target_txt = "清償日期"
                     tmp_line = self.find_target_context(target_txt, line, 1)
@@ -992,39 +886,40 @@ class StartParseText():
                     target_txt = "其他擔保範圍約定"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    data["sheet22"] = tmp_line
 
                     target_txt = "權利標的"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet22"] = tmp_line
+                    data["sheet23"] = tmp_line
 
                     target_txt = "標的登記次序"
                     tmp_line = self.find_target_context(
                         target_txt, line, 1, wholelink=True)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet23"] = tmp_line
+                    data["sheet24"] = tmp_line
 
                     target_txt = "設定權利範圍"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet24"] = tmp_line
+                    data["sheet25"] = tmp_line
 
                     target_txt = "證明書字號"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet25"] = tmp_line
+                    data["sheet26"] = tmp_line
 
                     target_txt = "共同擔保地號"
                     tmp_line = self.find_target_context(
                         target_txt, line, 1, continue_flag=True, debug=True)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet26"] = tmp_line
+                    data["sheet27"] = tmp_line
 
                     target_txt = "共同擔保建號"
                     tmp_line = self.find_target_context(
                         target_txt, line, 1, continue_flag=True)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet27"] = tmp_line
+                    data["sheet28"] = tmp_line
 
                     target_txt = "其他登記事項"
                     tmp_line = self.find_target_context(
@@ -1032,11 +927,12 @@ class StartParseText():
                     if tmp_line == "<p>(空白)</p":
                         tmp_line = "(空白)"
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet28"] = tmp_line
-        result = ''
-        check = models.OtherShipDepartment.objects.filter(sheet3=data["sheet3"], sheet4=data["sheet4"],sheet5=data["sheet5"])
+                    data["sheet29"] = tmp_line
+
+        check = models.OtherShipDepartment.objects.filter(
+            sheet3=data["sheet3"], sheet4=data["sheet4"], sheet5=data["sheet5"])
         if len(check) == 0:
-                    
+
             models.OtherShipDepartment.objects.create(
                 markingdepartment = mark,
                 sheet1=data["sheet1"],
@@ -1068,9 +964,9 @@ class StartParseText():
                 sheet27=data["sheet27"],
                 sheet28=data["sheet28"],
                 sheet29=data["sheet29"],
-                )
+            )
         else:
-            
+
             check.update(
                 update_time=datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
                 markingdepartment = mark,
@@ -1115,19 +1011,14 @@ class StartParseText():
             if isdir(folder_fullpath):
 
                 files = listdir(folder_fullpath)
-                # files = list(files)
                 files.reverse()
-                print(files)
                 print(folder_fullpath)
                 mark = ''
                 for file in files:
-
-                    
                     file_fullpath = join(folder_fullpath, file)
                     if isfile(file_fullpath):
                         print("檔案：", file)
-                        # continue
-                        
+
                         if file[:3] == "標示部":
                             # print(file[3:])
                             if file[3:] == '.html':
@@ -1135,14 +1026,11 @@ class StartParseText():
                         elif file[:5] == "owner":
                             index = file.split("_")[1]
                             if file[12:] == '.html':
-                                # print()
-                                self.process_owner(folder_fullpath, index,mark)
+                                self.process_owner(
+                                    folder_fullpath, index, mark)
                         elif file[:5] == "other":
                             index = file.split("_")[1]
                             # print(file[12:])
                             if file[12:] == '.html':
-                                self.process_other(folder_fullpath, index,mark)
-
-
-
-   
+                                self.process_other(
+                                    folder_fullpath, index, mark)

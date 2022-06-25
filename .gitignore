@@ -14,5 +14,8 @@ env
 .vscode/symbols.json
 *.zip
 output/
+output_land/
 dist/
 build/
+
+測資/

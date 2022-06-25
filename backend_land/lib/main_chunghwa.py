@@ -1,5 +1,5 @@
-import backend.lib.crawler as start_crawler
-import backend.lib.parse_text as parse_to_txt
+import backend_land.lib.crawler_chunghwa as start_crawler
+import backend_land.lib.parse_text_land as parse_to_txt
 
 # from tkinter import *
 
@@ -10,7 +10,7 @@ class NewCrawler():
         pass
     def main_start(self):
         try:
-            start_crawler.StartCrawler().main()
+            start_crawler.StartLandCrawler().main()
         except Exception as e:
             pass
         
