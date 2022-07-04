@@ -14,6 +14,7 @@ class StartParsePdf():
         for idx, each in enumerate(MarkingDepartments):
             pdf = FPDF()
             pdf.add_font('font', "", "kaiu.ttf", True)
+            pdf.set_text_color(0,0,255)
             pdf.set_font("font", size=12)
             pdf.add_page()
             pdf.cell(200, 8, txt="＊＊＊　　建物標示部　　＊＊＊",
@@ -31,13 +32,20 @@ class StartParsePdf():
                 pdf.cell(200, 8, txt="建物坐落地號:  " + eeach.sheet1 ,ln=currentLine, align="L")
                 currentLine = currentLine+1
 
-            pdf.cell(200, 8, txt="主要用途:  " + each.sheet8 + "                                   主要建材:  " + each.sheet9 , ln=currentLine, align="L")
+            pdf.cell(200, 8, txt="主要用途:  " + each.sheet8 + "    主要建材:  " + each.sheet9 , ln=currentLine, align="L")
            
             currentLine = currentLine+1
 
-            pdf.cell(200, 8, txt="層數:  " + each.sheet10+ "                                   總面積:  " + each.sheet11,ln=currentLine, align="L")
+            pdf.cell(200, 8, txt="層數:  " + each.sheet10+ "       總面積:  " + each.sheet11,ln=currentLine, align="L")
             currentLine = currentLine+1
-            pdf.cell(200, 8, txt="層次:  " + each.sheet12 + "                                   層次面積:  " + each.sheet13, ln=currentLine, align="L")
+
+            new_floor = each.sheet12.split(',')
+            new_floor2 = each.sheet13.split(',')
+            for idxx, eeach in enumerate(new_floor):
+                pdf.cell(200, 8, txt="層次:  " + new_floor[idxx] + "     層次面積:  " + new_floor2[idxx], ln=currentLine, align="L")
+
+
+            # pdf.cell(200, 8, txt="層次:  " + each.sheet12 + "     層次面積:  " + each.sheet13, ln=currentLine, align="L")
             currentLine = currentLine+1
             pdf.cell(200, 8, txt="建築完成日期:  " + each.sheet14, ln=currentLine, align="L")
             currentLine = currentLine+1
@@ -113,6 +121,9 @@ class StartParsePdf():
                 pdf.cell(200, 8, txt="權狀字號:  " + eeach.sheet13, ln=currentLine, align="L")
                 pdf.cell(200, 8, txt="相關他項登記次序:  " + eeach.sheet14, ln=currentLine, align="L")
                 pdf.cell(200, 8, txt="其他登記事項:  " + eeach.sheet15, ln=currentLine, align="L")
+
+               
+
 
             OtherShipDepartments = models.OtherShipDepartment.objects.filter(markingdepartment=each)
 

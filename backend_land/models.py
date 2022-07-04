@@ -99,6 +99,7 @@ class OtherShipDepartment(models.Model):
     sheet2 = models.CharField('鄉鎮市區',  max_length=50, default=None, null=True, blank=True)
     sheet3 = models.CharField('地段',  max_length=50, default=None, null=True, blank=True)
     sheet4 = models.CharField('地號',  max_length=50, default=None, null=True, blank=True)
+    
     sheet5 = models.CharField('登記次序',  max_length=50, default=None, null=True, blank=True)
     sheet6 = models.CharField('權利種類',  max_length=50, default=None, null=True, blank=True)
     sheet7 = models.CharField('收件年期',  max_length=50, default=None, null=True, blank=True)

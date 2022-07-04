@@ -9,15 +9,31 @@ from .models import StartCrawler
 from backend.lib.main import NewCrawler
 from backend.lib.main_chunghwa import NewCrawler as chunghwa
 from backend.lib import parse_txt_excel
+from backend.lib import custom_excel
 from backend.lib import parse_pdf
 from import_export.admin import ImportExportMixin
 from django_object_actions import DjangoObjectActions
 from django.http import HttpResponse
-import os 
+import os
 # Register your models here.
+
+@admin.action(description='下載Excel')
+def make_excel(modeladmin, request, queryset):
+    
+
+    print('輸出excel')
+    file_path = custom_excel.CusStartParseExcel().main(queryset=queryset)
+    print(file_path)
+    with open(file_path, 'rb') as fh:
+        response = HttpResponse(
+            fh.read(), content_type="application/vnd.ms-excel")
+        response['Content-Disposition'] = 'inline; filename=' + \
+            os.path.basename(file_path)
+        return response
 
 
 class MarkingDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
+    
     list_display = (
         'id',
         'sheet1',
@@ -38,7 +54,8 @@ class MarkingDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'create_time',
         'update_time'
     )
-    search_fields = ['sheet1','sheet2','sheet3','sheet4']
+    search_fields = ['sheet1', 'sheet2', 'sheet3', 'sheet4']
+    actions = [make_excel]
 
 
 class MarkingDepartmentDependsLocationNumberAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -98,7 +115,7 @@ class OwnershipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'create_time',
         'update_time'
     )
-    search_fields = ['sheet1','sheet2','sheet3','sheet4']
+    search_fields = ['sheet1', 'sheet2', 'sheet3', 'sheet4']
 
 
 class OtherShipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -137,13 +154,13 @@ class OtherShipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'create_time',
         'update_time'
     )
-    search_fields = ['sheet1','sheet2','sheet3','sheet4']
+    search_fields = ['sheet1', 'sheet2', 'sheet3', 'sheet4']
 
 
 # @admin.action(description='開始爬蟲')
 # def make_crawler(modeladmin, request, queryset):
 #     NewCrawler().main_start()
-    
+
 
 class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin):
     def chunghwa(modeladmin, request, queryset):
@@ -174,9 +191,23 @@ class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin
         file_path = parse_txt_excel.StartParseExcel().main()
         print(file_path)
         with open(file_path, 'rb') as fh:
-            response = HttpResponse(fh.read(), content_type="application/vnd.ms-excel")
-            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+            response = HttpResponse(
+                fh.read(), content_type="application/vnd.ms-excel")
+            response['Content-Disposition'] = 'inline; filename=' + \
+                os.path.basename(file_path)
             return response
+
+    def custom_excel(modeladmin, request, queryset):
+        print('輸出 CUstom excel')
+        file_path = custom_excel.CusStartParseExcel().main()
+        print(file_path)
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(
+                fh.read(), content_type="application/vnd.ms-excel")
+            response['Content-Disposition'] = 'inline; filename=' + \
+                os.path.basename(file_path)
+            return response
+
     def make_pdf(modeladmin, request, queryset):
         parse_pdf.StartParsePdf().main()
 
@@ -185,8 +216,10 @@ class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin
         'create_time',
         'status'
     )
-    changelist_actions = ('make_crawler','make_excel','make_pdf' )
+    changelist_actions = ('make_crawler', 'make_excel',
+                          'custom_excel', 'make_pdf')
     # actions = [make_crawler]
+
 
 admin.site.site_header = '地政事務所 - 爬蟲資料庫'
 admin.site.site_title = '地政事務所 - 爬蟲資料庫'

@@ -5,6 +5,8 @@ import openpyxl
 import datetime
 import numpy as np
 from copy import copy
+
+from sqlalchemy import null
 from backend import models
 
 

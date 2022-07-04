@@ -34,6 +34,14 @@ class MarkingDepartment(models.Model):
 
     def __str__(self):
         return self.sheet3 +' / ' +self.sheet4
+# class MarkingDepartmentFloor(models.Model):
+#     class Meta:
+#         verbose_name = '標示部 - 層次'
+#         verbose_name_plural = '標示部 - 層次'
+#     markingdepartment = models.ForeignKey(
+#         MarkingDepartment, on_delete=models.CASCADE)
+#     sheet1 = models.CharField('層次',  max_length=50, default=None, null=True, blank=True)
+#     sheet2 = models.CharField('層次面積',  max_length=50, default=None, null=True, blank=True)
 
 
 class MarkingDepartmentDependsLocationNumber(models.Model):

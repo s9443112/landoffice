@@ -192,6 +192,7 @@ class StartLandCrawler(object):
                     break
 
             landSection_txt = txts[1][index:index+4]
+            city = txts[1][8:11]
              
             col+=1
 
@@ -206,6 +207,20 @@ class StartLandCrawler(object):
                 try:
                 
                     while True:
+                        selectCity = self.find_element_by_name("country")
+                        if selectCity != []:
+                            selectCity = Select(selectCity)
+
+                            if city == '臺北市':
+                                selectCity.select_by_index(1)
+                            elif city == '新北市':
+                                selectCity.select_by_index(2)
+                            else:
+                                selectCity.select_by_index(3)
+                        else:
+                            time.sleep(1)
+                        time.sleep(1)
+
                         landSection = self.find_element_by_name("sectioncode")
 
                         if landSection != []:

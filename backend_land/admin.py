@@ -9,10 +9,11 @@ from backend_land.lib.main import NewCrawler
 from backend_land.lib.main_chunghwa import NewCrawler as chunghwa
 from backend_land.lib import parse_txt_excel
 from backend_land.lib import parse_pdf
+from backend_land.lib import custom_excel
 from import_export.admin import ImportExportMixin
 from django_object_actions import DjangoObjectActions
 from django.http import HttpResponse
-import os 
+import os
 # Register your models here.
 
 
@@ -35,12 +36,11 @@ class MarkingDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'sheet14',
         'sheet15',
         'sheet16',
-    
+
         'create_time',
         'update_time'
     )
-    search_fields = ['sheet1','sheet2','sheet3','sheet4']
-
+    search_fields = ['sheet1', 'sheet2', 'sheet3', 'sheet4']
 
 
 class OwnershipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -67,7 +67,7 @@ class OwnershipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'create_time',
         'update_time'
     )
-    search_fields = ['sheet1','sheet2','sheet3','sheet4']
+    search_fields = ['sheet1', 'sheet2', 'sheet3', 'sheet4']
 
 
 class OwnershipDepartmentHistoryAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -117,13 +117,13 @@ class OtherShipDepartmentAdmin(ImportExportMixin, admin.ModelAdmin):
         'create_time',
         'update_time'
     )
-    search_fields = ['sheet1','sheet2','sheet3','sheet4']
+    search_fields = ['sheet1', 'sheet2', 'sheet3', 'sheet4']
 
 
 # @admin.action(description='開始爬蟲')
 # def make_crawler(modeladmin, request, queryset):
 #     NewCrawler().main_start()
-    
+
 
 class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin):
     def chunghwa(modeladmin, request, queryset):
@@ -136,7 +136,6 @@ class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin
         start_scheduler = StartCrawler.objects.get(id=start_scheduler[0].id)
         start_scheduler.status = True
         start_scheduler.save()
-
 
     def make_crawler(modeladmin, request, queryset):
         print("開始爬蟲")
@@ -155,19 +154,35 @@ class StartCrawlerAdmin(DjangoObjectActions, ImportExportMixin, admin.ModelAdmin
         file_path = parse_txt_excel.StartParseExcel().main()
         print(file_path)
         with open(file_path, 'rb') as fh:
-            response = HttpResponse(fh.read(), content_type="application/vnd.ms-excel")
-            response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+            response = HttpResponse(
+                fh.read(), content_type="application/vnd.ms-excel")
+            response['Content-Disposition'] = 'inline; filename=' + \
+                os.path.basename(file_path)
             return response
+
     def make_pdf(modeladmin, request, queryset):
         parse_pdf.StartParsePdf().main()
+
+    def custom_excel(modeladmin, request, queryset):
+        print('輸出 CUstom excel')
+        file_path = custom_excel.CusStartParseExcel().main()
+        print(file_path)
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(
+                fh.read(), content_type="application/vnd.ms-excel")
+            response['Content-Disposition'] = 'inline; filename=' + \
+                os.path.basename(file_path)
+            return response
 
     list_display = (
         'id',
         'create_time',
         'status'
     )
-    changelist_actions = ('chunghwa','make_crawler','make_excel','make_pdf' )
+    changelist_actions = ('make_crawler', 'make_excel',
+                          'custom_excel', 'make_pdf')
     # actions = [make_crawler]
+
 
 admin.site.site_header = '地政事務所 - 土地爬蟲資料庫'
 admin.site.site_title = '地政事務所 - 土地爬蟲資料庫'
@@ -175,6 +190,7 @@ admin.site.index_title = '功能列表'
 
 admin.site.register(MarkingDepartment, MarkingDepartmentAdmin)
 admin.site.register(OwnershipDepartment, OwnershipDepartmentAdmin)
-admin.site.register(OwnershipDepartmentHistory, OwnershipDepartmentHistoryAdmin)
+admin.site.register(OwnershipDepartmentHistory,
+                    OwnershipDepartmentHistoryAdmin)
 admin.site.register(OtherShipDepartment, OtherShipDepartmentAdmin)
 admin.site.register(StartCrawler, StartCrawlerAdmin)

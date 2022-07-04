@@ -309,8 +309,13 @@ class StartParseText():
             if len(cells) < 1:
                 continue
             if str(cells[0]) == '<td class="left">附屬建物用途</td>':
+                # print(cells)
                 data["sheet1"] = cells[1].text
-                data["sheet2"] = cells[3].text
+
+                if len(cells) >2:
+                    data["sheet2"] = cells[3].text
+                else:
+                    data["sheet2"] = ''
 
             if "sheet1" in data and "sheet2" in data:
                 if result != '':
@@ -367,6 +372,35 @@ class StartParseText():
                         sheet1 = data["sheet1"],
                     )
                 data = {}
+
+    def StartFindFloor(self, input_path,writer):
+        soup = BeautifulSoup(open(input_path, encoding="utf-8"), 'html.parser')
+        table = soup.find(lambda tag: tag.name == 'table' and tag.has_attr(
+            'cellpadding') and tag.has_attr('cellpadding') and tag.has_attr('bordercolor'))
+        result = ''
+        result2 = ''
+        for row in table.findAll('tr'):
+            cells = row.findAll('td')
+            if len(cells) < 1:
+                continue
+            # print(cells)
+            if str(cells[0]) == '<td class="left">層次</td>':
+                if result == '':
+                    result = cells[1].text
+                else:
+                    result = result + ', '+cells[1].text + '\n'
+                
+                if result2 == '':
+                    result2 = cells[3].text
+                else:
+                    result2 = result2 + ', '+cells[3].text + '\n'
+                # resul2 = resul2 + ', '+cells[1].text
+                
+        
+        # print(result)
+        # input()
+        return result,result2
+        # input()
          
 
     def StartFindOther(self, input_path,writer):
@@ -532,10 +566,13 @@ class StartParseText():
         target_txt = "<style>#content a:link {"
         writer.write("建物標示部\n")
         data = {}
+        
         for line in reader.readlines():
+            # print("inside")
             line = line[:-1]
+            # print(line[:len(target_txt)])
             if len(line) > len(target_txt):
-                if line[:len(target_txt)] == target_txt:
+                if line[:len(target_txt)] == target_txt or line[:len(target_txt)] == '    <style>#content a:li':
 
                     target_txt = "縣市"
                     tmp_line = self.find_target_context(target_txt, line, 1)
@@ -594,20 +631,20 @@ class StartParseText():
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet11"] = tmp_line
 
-                    target_txt = "層次面積"
-                    tmp_line = self.find_target_context(target_txt, line, 1)
-                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet13"] = tmp_line
-
                     target_txt = "層數"
                     tmp_line = self.find_target_context(target_txt, line, 1)
                     writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
                     data["sheet10"] = tmp_line
 
-                    target_txt = "層次"
-                    tmp_line = self.find_target_context(target_txt, line, 1)
-                    writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
-                    data["sheet12"] = tmp_line
+                    # target_txt = "層次面積"
+                    # tmp_line = self.find_target_context(target_txt, line, 1)
+                    # writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    # data["sheet13"] = tmp_line
+
+                    # target_txt = "層次"
+                    # tmp_line = self.find_target_context(target_txt, line, 1)
+                    # writer.write("[" + target_txt + "]\n" + tmp_line + "\n")
+                    # data["sheet12"] = tmp_line
 
                     target_txt = "建築完成日期"
                     tmp_line = self.find_target_context(target_txt, line, 1)
@@ -617,35 +654,36 @@ class StartParseText():
                     target_txt = "附屬建物用途"
                     start_index = 0
 
-                    while 1:
-                        # print(start_index)
-                        house_index = line.find(target_txt, start_index)
+                    # while 1:
+                    #     # print(start_index)
+                    #     house_index = line.find(target_txt, start_index)
 
-                        tmp_line = self.find_target_context(
-                            target_txt, line, 1, count=start_index)
+                    #     tmp_line = self.find_target_context(
+                    #         target_txt, line, 1, count=start_index)
 
-                        if tmp_line != '★錯誤★':
-                            writer.write(
-                                "[" + target_txt + "]\n" + tmp_line + "\n")
-                        else:
-                            pass
-                            # writer.write("[" + target_txt + "]\n" + '無' + "\n")
+                    #     if tmp_line != '★錯誤★':
+                    #         writer.write(
+                    #             "[" + target_txt + "]\n" + tmp_line + "\n")
+                    #     else:
+                    #         pass
+                    #         writer.write("[" + target_txt + "]\n" + '無' + "\n")
 
-                        if tmp_line != '★錯誤★':
+                    #     if tmp_line != '★錯誤★':
 
-                            de_target_txt = "面積"
-                            tmp_line = self.find_target_context(
-                                de_target_txt, line, 1, count=start_index+60)
-                            writer.write(
-                                "[" + de_target_txt + "]\n" + tmp_line + "\n")
-                        else:
-                            pass
-                            # writer.write("[" + target_txt + "]\n" + '無' + "\n")
+                    #         de_target_txt = "面積"
+                    #         tmp_line = self.find_target_context(
+                    #             de_target_txt, line, 1, count=start_index+60)
+                    #         writer.write(
+                    #             "[" + de_target_txt + "]\n" + tmp_line + "\n")
+                    #     else:
+                    #         pass
+                    #         writer.write("[" + target_txt + "]\n" + '無' + "\n")
 
-                        if house_index == -1:
-                            break
+                    #     if house_index == -1:
+                    #         break
 
-                        start_index = house_index + 1
+                    #     start_index = house_index + 1
+                    data["sheet12"], data["sheet13"] = self.StartFindFloor(input_path,writer)
                     
                     data["sheet15"] = self.StartFindOther(input_path,writer)
                     
@@ -658,6 +696,8 @@ class StartParseText():
         reader.close
         result = ''
         gg = True
+        print(data)
+        # input()
         check = models.MarkingDepartment.objects.filter(sheet3=data["sheet3"], sheet4=data["sheet4"])
         if len(check) == 0:
        
@@ -724,7 +764,7 @@ class StartParseText():
         for line in reader.readlines():
             line = line[:-1]
             if len(line) > len(target_txt):
-                if line[:len(target_txt)] == target_txt:
+                if line[:len(target_txt)] == target_txt or  line[:len(target_txt)] == "    <style>.left{	font-size: 1":
 
                     target_txt = "縣市名稱"
                     tmp_line = self.find_target_context(target_txt, line, 1)
@@ -866,7 +906,7 @@ class StartParseText():
         for line in reader.readlines():
             line = line[:-1]
             if len(line) > len(target_txt):
-                if line[:len(target_txt)] == target_txt:
+                if line[:len(target_txt)] == target_txt or line[:len(target_txt)] == "    <style>#content a:li":
 
                     target_txt = "縣市名稱"
                     tmp_line = self.find_target_context(target_txt, line, 1)
